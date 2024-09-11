@@ -1,0 +1,71 @@
+amit.benaim, adiavig
+209186402, 207865973
+
+1.	In the design we chose the responsibility of adding and removing objects from the game is reserved
+exclusively to the BrickerGameManager class. Sending an instance of this class to BasicCollisionStrategy
+allows the latter to delete the brick in its onCollision method using BrickerGameManager's public methods.
+The advantage of this design is that it supports encapsulation – the BrickerGameManager is the only class that
+can add/remove objects from the game' which reduces dependencies and keeps the code clean, organized,
+and modular.
+
+2.	For the lives amount display we added 2 classes: LifeCountGraphic and LifeCountText. In our design, the
+lives counting is handled by the game manager, which keeps a private field of type Counter to maintain this
+value. The game manager sends this counter to both classes so they can read it but not edit it, since they are
+only responsible for the display.
+In the LifeCountGraphic class, we have a constructor that draws hearts in the screen according to some initial
+constant and an update method, that adds/deletes hearts when the lives counter's value is changed, using
+BrickerGameManager's public methods for adding/removing objects. Similarly, the LifeCountText class gets the
+counter from the manager and displays its numeric value in the appropriate color.
+
+3.  Each special behavior strategy was implemented using a class that inherits from BasicCollisionStrategy,
+because all the strategies had to delete the brick just like the basic strategy. We used a strategies factory
+for the clean and efficient creation of all strategies.
+Extra Balls strategy – For this strategy, we created the Puck class that inherits from Ball, since it has all
+the basic behaviors of a ball but also some new features. On ExtraPucksStrategy's OnCollision method, we
+create 2 new Pucks, define their velocity, and add them to the game. We define the main ball size as a public
+constant in the public Constants class so all classes can access it.
+Extra Paddle strategy- for this strategy, we created the ExtraPaddle class that inherits from Paddle. In
+addition to the basic behaviors of the paddle the ExtraPaddle also counts how many times the main ball hits it
+and if this number reaches 4 – it removes itself from the game's object list by calling the manager's public
+method deleteObjectFromLayer.
+Camera change strategy – for this strategy we created the CameraBehavior class which is responsible for
+keeping track of ball collisions with all other objects in the game. The CameraBehavior is created when the
+ball hits the brick that holds this special behavior, and from this moment on it counts 4 hits of the ball
+until it deactivates the camera mode and removes itself from the objects list. To keep track of the count the
+CameraBehavior accesses the main ball using the manager's getBall method and then it reads from the ball's
+collisionCounter field using the ball's getCollisionCounter method. We chose to implement this check in a
+separate class (CameraBehavior) to keep encapsulation and avoid letting the ball handle the strategy's
+interests.
+Gaining life strategy – for this strategy, we created the ExtraLife class that inherits from GameObject.
+The strategy creates an ExtraLife object and adds it to the list of game objects. In the ExtraLife class, we
+overrode the shouldCollideWIth method so the ExtraLife heart can only collide with the main paddle (used
+getTag to identify the main paddle). This way the Oncollision method is only called when the heart collides
+with the main paddle and then the life-adding logic is activated.
+
+4.	We implemented the Double behavior strategy in the ExtraBehaviorStrategy class. For this design we used
+composition: this class holds in a private field an array of chosen strategies. We chose an array for this
+implementation to allow program modification/extension, for example, to make a brick with more than 3 special
+behaviors. The constructor of ExtraBehaviorStrategy gets a Boolean parameter, canChooseExtraBehavior, that
+describes whether this instance can choose ExtraBehaviorStrategy as one of its 2 strategies. This way, when
+the bricks are created in the game's initialization this strategy is created with this canChooseExtraBehavior
+== true, but in the constructor – if indeed an ExtraBehaviorStrategy was randomized then it will be created
+with canChooseExtraBehavior == false, so it cannot choose extraBehaoirStrategy again. This design ensures that
+no more than 3 special behaviors will be randomized for one brick. To support the option to not choose
+extraBehaoirStrategy we simply randomize our selection from a smaller array of options.
+
+5.	All public methods and fields were added to BrickerGameManager class only.
+First, in our API we implemented 2 constructors – one that gets the number of bricks lines and the number of
+bricks per line as a parameter and another that uses default values as were given in the exercise
+instructions.
+getLifeCounter – since the ExtraLife class might change the game's life amount it should have access to this
+counter.
+getBricksCounter – each strategy implements the logic of removing a brick when the ball hits it. Since the
+brick removal is done by the strategies, they should have access to this counter.
+addObjectToLayer, DeleteObjectFromLayer – as explained in section 1, the game manager is responsible for
+adding/removing objects from the game, therefore this is his method. Yet the game manager gives other classes
+in the game permission to call these methods of his when he does not have direct access to said objects.
+getBall – as explained in section 3, the ChangeCmeraStrategy demands to access the ball's hits counter value
+so it should be allowed to access the main ball, to get the value of this field.
+getImageReader, getInputListener, getSoundReader,getWindowController – since the strategies create objects in
+the game on run time and keep track of some of the objects' relative location, they should have access to
+these important features of the game.
